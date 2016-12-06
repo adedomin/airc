@@ -34,6 +34,10 @@
         android:defaultValue="true"
         android:key="show-join-part-quit"
         android:title="Show JOIN|PART|QUIT" />
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="override-prefix"
+        android:title="Channel Prefix Not Required" />
     <EditTextPreference
         android:defaultValue="150"
         android:key="scrollback"

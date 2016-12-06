@@ -24,4 +24,14 @@
         <item name="remove_serv">Delete Server</item>
         <item name="settings">Settings</item>
     </array>
+    <array name="random_colors">
+        <item name="red">#EC407A</item>
+        <item name="orange">#FB8C00</item>
+        <item name="yellow">#FFE082</item>
+        <item name="green">#66BB6A</item>
+        <item name="blue">#29B6FC</item>
+        <item name="indigo">#9FA8DA</item>
+        <item name="purple">#7E57C2</item>
+        <item name="grey">#78909C</item>
+    </array>
 </resources>

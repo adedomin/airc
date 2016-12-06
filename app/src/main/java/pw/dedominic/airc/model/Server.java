@@ -136,6 +136,7 @@ public class Server implements Comparable<Server>, Serializable {
         if (this.channels == null) {
             this.channels = new ArrayList<String>();
         }
+        if (this.channels.indexOf(channel) > -1) return;
         this.channels.add(channel);
     }
 

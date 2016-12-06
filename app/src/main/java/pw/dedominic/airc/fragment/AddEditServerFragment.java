@@ -22,6 +22,7 @@ package pw.dedominic.airc.fragment;
 import android.content.Context;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -35,6 +36,7 @@ import android.widget.Toast;
 import pw.dedominic.airc.R;
 import pw.dedominic.airc.helper.LeftSwipeDetect;
 import pw.dedominic.airc.model.Server;
+import pw.dedominic.airc.model.Settings;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -79,6 +81,7 @@ public class AddEditServerFragment extends Fragment
 
     public interface OnSubmitAddServer {
         public void addServer(Server server);
+        public Settings getSettings();
     }
 
     @Override
@@ -101,6 +104,7 @@ public class AddEditServerFragment extends Fragment
         host = (EditText) view.findViewById(R.id.hostname_text);
         port = (EditText) view.findViewById(R.id.port_text);
         nick = (EditText) view.findViewById(R.id.nick_text);
+        nick.setText(callback.getSettings().getDefaultNick());
         pass = (EditText) view.findViewById(R.id.pass_text);
         nick_pass = (EditText) view.findViewById(R.id.nickpass_text);
         tls = (CheckBox) view.findViewById(R.id.tls_check);
@@ -120,7 +124,12 @@ public class AddEditServerFragment extends Fragment
         name.setText(server.getTitle());
         host.setText(server.getHost());
         port.setText(server.getPort()+"");
-        nick.setText(server.getNick());
+        if (server.getNick().equals("")) {
+            nick.setText(callback.getSettings().getDefaultNick());
+        }
+        else {
+            nick.setText(server.getNick());
+        }
         pass.setText(server.getPassword());
         nick_pass.setText(server.getNickpass());
         tls.setChecked(server.isTls());

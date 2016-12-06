@@ -80,6 +80,15 @@ public class Settings {
     }
 
     /**
+     * override requiring channel names to start with: * # & ! + ~ .
+     * <p>See RFC 2811 Section 2.1</p>
+     * @return true if overridden
+     */
+    public boolean overridePrefixReq() {
+        return preferences.getBoolean("override-prefix", false);
+    }
+
+    /**
      * set maximum scrollback buffer
      *
      * @return scrollback buffer size, default 150
