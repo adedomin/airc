@@ -41,6 +41,7 @@ import java.util.Map;
 import pw.dedominic.airc.db.DatabaseHelper;
 import pw.dedominic.airc.fragment.AddEditServerFragment;
 import pw.dedominic.airc.fragment.ChannelFragment;
+import pw.dedominic.airc.fragment.PrefFragment;
 import pw.dedominic.airc.model.Conversation;
 import pw.dedominic.airc.model.Server;
 
@@ -114,7 +115,7 @@ public class App extends OrmLiteBaseActivity<DatabaseHelper>
      *
      * @param server a server id (title)
      */
-    public void createOrEditServer(String server) {
+    private void createOrEditServer(String server) {
         Server serv = dao.queryForId(server);
         if (serv == null) {
             serv = Server.getDefaultServer();
@@ -126,13 +127,25 @@ public class App extends OrmLiteBaseActivity<DatabaseHelper>
         AddEditServerFragment fragment = AddEditServerFragment.newInstance(serv);
         FragmentManager fragmentManager = getFragmentManager();
         fragmentManager.beginTransaction()
+                       .setCustomAnimations(R.anim.enter_left, R.anim.exit_right,
+                               R.anim.enter_left, R.anim.exit_right)
                        .replace(R.id.fragment_area, fragment)
+                       .addToBackStack(null)
                        .commit();
     }
 
-    public void removeServer(String server) {
+    private void removeServer(String server) {
         dao.deleteById(server);
         recreateDrawerItems();
+    }
+
+    private void showSettings() {
+        getFragmentManager().beginTransaction()
+                       .setCustomAnimations(R.anim.enter_left, R.anim.exit_right,
+                               R.anim.enter_left, R.anim.exit_right)
+                       .replace(R.id.fragment_area, new PrefFragment())
+                       .addToBackStack(null)
+                       .commit();
     }
 
     /**
@@ -183,6 +196,12 @@ public class App extends OrmLiteBaseActivity<DatabaseHelper>
             }
             if (editSelect) editSelect = false;
             deleteSelect = !deleteSelect;
+        }
+        else  if (item.getTitle().toString().equals("Settings")) {
+            editSelect = false;
+            deleteSelect = false;
+            showSettings();
+            drawer.closeDrawer(Gravity.LEFT);
         }
         return true;
     }

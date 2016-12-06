@@ -17,11 +17,6 @@
   ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<resources>
-    <array name="nav_items">
-        <item name="add_serv">Add Server</item>
-        <item name="edit_serv">Edit Server</item>
-        <item name="remove_serv">Delete Server</item>
-        <item name="settings">Settings</item>
-    </array>
-</resources>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+</selector>

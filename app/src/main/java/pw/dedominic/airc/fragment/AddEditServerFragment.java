@@ -22,7 +22,9 @@ package pw.dedominic.airc.fragment;
 import android.content.Context;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -31,6 +33,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import pw.dedominic.airc.R;
+import pw.dedominic.airc.helper.LeftSwipeDetect;
 import pw.dedominic.airc.model.Server;
 
 /**
@@ -50,6 +53,8 @@ public class AddEditServerFragment extends Fragment
     private Button saveBtn;
     private Button cancelBtn;
 
+    private GestureDetector detector;
+
     private OnSubmitAddServer callback;
 
     public AddEditServerFragment() {
@@ -66,14 +71,14 @@ public class AddEditServerFragment extends Fragment
         return newInstance;
     }
 
-    public interface OnSubmitAddServer {
-        public void addServer(Server server);
-    }
-
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         callback = (OnSubmitAddServer) context;
+    }
+
+    public interface OnSubmitAddServer {
+        public void addServer(Server server);
     }
 
     @Override
@@ -81,6 +86,17 @@ public class AddEditServerFragment extends Fragment
                              Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_addedit_server, null);
+
+        final GestureDetector gesture = new GestureDetector(getActivity(),
+                new LeftSwipeDetect(getActivity()));
+
+        view.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                return gesture.onTouchEvent(event);
+            }
+        });
+
         name = (EditText) view.findViewById(R.id.title_text);
         host = (EditText) view.findViewById(R.id.hostname_text);
         port = (EditText) view.findViewById(R.id.port_text);

@@ -17,11 +17,12 @@
   ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<resources>
-    <array name="nav_items">
-        <item name="add_serv">Add Server</item>
-        <item name="edit_serv">Edit Server</item>
-        <item name="remove_serv">Delete Server</item>
-        <item name="settings">Settings</item>
-    </array>
-</resources>
+<set xmlns:android="http://schemas.android.com/apk/res/android">
+    <objectAnimator
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:duration="100"
+        android:propertyName="X"
+        android:valueFrom="0"
+        android:valueTo="1000"
+        android:valueType="floatType" />
+</set>
