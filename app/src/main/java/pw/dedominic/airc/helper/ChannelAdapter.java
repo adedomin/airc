@@ -27,11 +27,13 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.amulyakhare.textdrawable.TextDrawable;
+import com.amulyakhare.textdrawable.util.ColorGenerator;
+
 import java.util.ArrayList;
 import java.util.Collections;
 
 import pw.dedominic.airc.R;
-import pw.dedominic.airc.drawing.CircleCharBitmapProvider;
 
 /**
  * Generates channel names with icons of the Second (first is chan prefix) letter
@@ -64,7 +66,6 @@ public class ChannelAdapter extends ArrayAdapter<String> {
             arrcopy = (ArrayList<String>) channels.clone();
             Collections.sort(arrcopy);
             arrcopy.add(0, STATUS_VALUE);
-            arrcopy.add(ADD_CHAN_VALUE);
         }
 
         return new ChannelAdapter(context, arrcopy, false);
@@ -91,13 +92,14 @@ public class ChannelAdapter extends ArrayAdapter<String> {
         if (channel != null) {
             name.setText(channel);
             if (!channel.equals(STATUS_VALUE)
-                    && !channel.equals(ADD_CHAN_VALUE)
                     && !channel.equals(NOT_CONNECT)) {
-                icon.setImageBitmap(
-                        CircleCharBitmapProvider.getCircleChar(
-                                "" + channel.charAt(1), getContext().getResources()
-                        )
+
+                TextDrawable drawable = TextDrawable.builder().buildRound(
+                        ""+channel.charAt(1),
+                        ColorGenerator.MATERIAL.getColor(channel)
                 );
+
+                icon.setImageDrawable(drawable);
             }
         }
         return convertView;

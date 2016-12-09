@@ -19,6 +19,8 @@
 package pw.dedominic.airc.model;
 
 import java.io.Serializable;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 /**
  * irc message body
@@ -36,6 +38,26 @@ public class IrcMessage implements Serializable {
         this.body = body;
         this.nick = nick;
         this.timestamp = timestamp;
+    }
+
+    @Override
+    public String toString() {
+        String timestamp = "";
+        if (this.timestamp != null) {
+            timestamp = String.format(Locale.getDefault(), "%d:%d",
+                    TimeUnit.MILLISECONDS.toHours(this.timestamp),
+                    TimeUnit.MILLISECONDS.toMinutes(this.timestamp)
+            );
+        }
+        if (nick != null && body != null) {
+            return String.format(Locale.getDefault(), "[%s] <%s> %s",
+                    timestamp,
+                    this.nick,
+                    this.body
+            );
+        }
+
+        return "";
     }
 
     public String getBody() {

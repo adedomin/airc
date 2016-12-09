@@ -25,8 +25,10 @@ import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.v4.widget.DrawerLayout;
 import android.text.InputType;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,6 +41,8 @@ import java.util.Collections;
 
 import pw.dedominic.airc.R;
 import pw.dedominic.airc.helper.ChannelAdapter;
+import pw.dedominic.airc.helper.ChatAdapter;
+import pw.dedominic.airc.model.Conversation;
 
 /**
  * Created by prussian on 12/5/16.
@@ -47,6 +51,12 @@ public class ChannelFragment extends Fragment {
 
     private ListView channelList;
     private OnSelectChannel callback;
+
+    private ListView chatList;
+    private EditText chatInput;
+    private DrawerLayout chatDrawer;
+
+    private ChatAdapter chatAdapter;
 
     public interface OnSelectChannel {
         public void channelSelected(String channel);
@@ -58,7 +68,6 @@ public class ChannelFragment extends Fragment {
     }
 
     public static ChannelFragment newInstance(ArrayList<String> channels) {
-        Log.e("newChannelFrag", "new instance");
         ChannelFragment channelFragment = new ChannelFragment();
         Bundle bundle = new Bundle();
         if (channels != null) {
@@ -80,6 +89,7 @@ public class ChannelFragment extends Fragment {
 
         View v = inflater.inflate(R.layout.fragment_channel, null);
         channelList = (ListView) v.findViewById(R.id.channel_list);
+
         channelList.setAdapter(
                 ChannelAdapter.newInstance(
                     getActivity(), (ArrayList<String>) getArguments().getSerializable("channelList")
@@ -89,28 +99,6 @@ public class ChannelFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 String channel = (String) parent.getItemAtPosition(position);
-                if (channel.equals(ChannelAdapter.ADD_CHAN_VALUE)) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder((Context) getActivity());
-                    builder.setTitle("Add Channel");
-                    final EditText input = new EditText((Context) getActivity());
-                    input.setInputType(InputType.TYPE_CLASS_TEXT);
-                    builder.setView(input);
-                    // Set up the buttons
-                    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            callback.channelAdded(input.getText().toString());
-                        }
-                    });
-                    builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.cancel();
-                        }
-                    });
-                    builder.show();
-                    return;
-                }
                 callback.channelSelected(channel);
             }
         });

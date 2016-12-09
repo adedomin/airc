@@ -16,32 +16,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package pw.dedominic.airc.drawing;
+package pw.dedominic.airc.helper;
 
-import android.content.res.Resources;
-import android.graphics.Paint;
+import android.widget.EditText;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Random;
-
-import pw.dedominic.airc.R;
+import java.util.Scanner;
 
 /**
- * Created by prussian on 12/6/16.
+ * Created by prussian on 12/7/16.
  */
-public class PaintFactory {
-    private static final Random random = new Random();
-    public static Paint getPaint(int a, int r, int g, int b) {
-        Paint paint = new Paint();
-        paint.setARGB(a, r, g, b);
-        return paint;
-    }
+public class CursorWord {
+    /**
+     * helper for getting word that is near the cursor on an edittext
+     *
+     * @return the word near an edittext
+     */
+    public static String getWordAtCursor(EditText editText) {
+        int cursorAt = editText.getSelectionStart();
+        Scanner scanner = new Scanner(editText.getText().toString());
+        scanner.useDelimiter("\\s");
 
-    public static int getRandomColor(Resources resources, String hash) {
-        int code = hash.hashCode() % 8;
-        return resources.getIntArray(R.array.random_colors)[code];
+        while (scanner.hasNext()) {
+            String word = scanner.next();
+            if (scanner.match().start() <= cursorAt && cursorAt <= scanner.match().end()) {
+                return word;
+            }
+        }
+        return "";
     }
 }

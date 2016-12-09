@@ -23,6 +23,7 @@
         <item name="edit_serv">Edit Server</item>
         <item name="remove_serv">Delete Server</item>
         <item name="settings">Settings</item>
+        <item name="exit">Exit</item>
     </array>
     <array name="random_colors">
         <item name="red">#EC407A</item>

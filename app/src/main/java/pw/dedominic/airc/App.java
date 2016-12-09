@@ -19,20 +19,26 @@
 package pw.dedominic.airc;
 
 import android.app.FragmentManager;
-import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.text.InputType;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
+import android.view.View;
+import android.widget.EditText;
 import android.widget.Toast;
 
-import com.j256.ormlite.android.apptools.OrmLiteBaseActivity;
 import com.j256.ormlite.dao.RuntimeExceptionDao;
 
 import java.util.ArrayList;
@@ -40,11 +46,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import pw.dedominic.airc.db.DatabaseHelper;
+import pw.dedominic.airc.db.DatabaseSingleton;
 import pw.dedominic.airc.fragment.AddEditServerFragment;
 import pw.dedominic.airc.fragment.ChannelFragment;
 import pw.dedominic.airc.fragment.PrefFragment;
-import pw.dedominic.airc.helper.ChannelAdapter;
 import pw.dedominic.airc.model.Conversation;
 import pw.dedominic.airc.model.Server;
 import pw.dedominic.airc.model.Settings;
@@ -52,21 +57,23 @@ import pw.dedominic.airc.model.Settings;
 /**
  * Created by prussian on 12/5/16.
  */
-public class App extends OrmLiteBaseActivity<DatabaseHelper>
-                 implements NavigationView.OnNavigationItemSelectedListener,
-                            AddEditServerFragment.OnSubmitAddServer,
-                            ChannelFragment.OnSelectChannel {
+public class App extends AppCompatActivity
+        implements NavigationView.OnNavigationItemSelectedListener,
+        AddEditServerFragment.OnSubmitAddServer,
+        ChannelFragment.OnSelectChannel {
 
     public static final String CHAN_PREFIX = "[#&!+~.]";
     public static final Pattern CHAN_MATCH = Pattern.compile("^[#&!+~]");
     public static final Pattern SPACE_MATCH = Pattern.compile("[ \t\n,:]");
 
-    private Context context;
+    private DatabaseSingleton databaseSingleton;
 
     private Server selectedServer;
     private Map<String, Conversation> channelConvos;
     private DrawerLayout drawer;
     private NavigationView navView;
+    private ActionBar actionBar;
+    private ActionBarDrawerToggle toggle;
     private RuntimeExceptionDao<Server, String> dao;
 
     private Settings settings;
@@ -79,10 +86,7 @@ public class App extends OrmLiteBaseActivity<DatabaseHelper>
     protected void onCreate(Bundle savedInstance) {
         super.onCreate(savedInstance);
 
-        settings = new Settings(this);
-        context = getApplicationContext();
-        setContentView(R.layout.app_layout);
-        dao = getHelper().getDao();
+        // recover state from previous run
         if (savedInstance != null) {
             selectedServer = (Server) savedInstance.get("selectedServer");
             channelConvos = (Map<String, Conversation>) savedInstance.get("channelConvos");
@@ -90,11 +94,81 @@ public class App extends OrmLiteBaseActivity<DatabaseHelper>
         if (channelConvos == null) {
             channelConvos = new HashMap<String, Conversation>();
         }
+
+        // database init
+        DatabaseSingleton.initializeInstance(this);
+        databaseSingleton = DatabaseSingleton.getInstance();
+        dao = databaseSingleton.getDatabase();
+        // settings
+        settings = new Settings(this);
+
+        // layout
+        actionBar = getSupportActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setHomeButtonEnabled(true);
+        setContentView(R.layout.app_layout);
         drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         navView = (NavigationView) findViewById(R.id.navigation_view);
         navView.setNavigationItemSelectedListener(this);
+
+        // init layout
+        if (selectedServer == null) {
+            actionBar.setTitle("Not Connected");
+        }
+        toggle = new ActionBarDrawerToggle(this, drawer, 0, 0) {
+            @Override
+            public void onDrawerClosed(View drawerView) {
+                super.onDrawerClosed(drawerView);
+                invalidateOptionsMenu();
+            }
+
+            @Override
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+                invalidateOptionsMenu();
+            }
+        };
+        drawer.setDrawerListener(toggle);
         recreateDrawerItems();
         changeServer(selectedServer);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (toggle.onOptionsItemSelected(item)) return true;
+        int menuid = item.getItemId();
+        switch (menuid) {
+            case R.id.add_chan:
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("Add Channel");
+                final EditText input = new EditText(this);
+                input.setInputType(InputType.TYPE_CLASS_TEXT);
+                builder.setView(input);
+                // Set up the buttons
+                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        channelAdded(input.getText().toString());
+                    }
+                });
+                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+                builder.show();
+                break;
+            case R.id.close_server:
+                changeServer(null);
+        }
+        return true;
     }
 
     public void recreateDrawerItems() {
@@ -102,15 +176,19 @@ public class App extends OrmLiteBaseActivity<DatabaseHelper>
         menu.clear();
         SubMenu smenu = menu.addSubMenu("Servers");
         for (Server server : dao) {
-            smenu.add(server.getTitle());
+            if (server.equals(selectedServer))
+                smenu.add(server.getTitle()).setIcon(R.drawable.green_circle);
+            else smenu.add(server.getTitle());
         }
         smenu = menu.addSubMenu("Actions");
         String[] actions = getResources().getStringArray(R.array.nav_items);
-        if (actions.length != 4) throw new RuntimeException("LOLWUT?");
+        if (actions.length != 5) throw new RuntimeException("LOLWUT?");
         smenu.add(actions[0]).setIcon(android.R.drawable.ic_input_add);
         smenu.add(actions[1]).setIcon(android.R.drawable.ic_menu_edit);
         smenu.add(actions[2]).setIcon(android.R.drawable.ic_menu_delete);
         smenu.add(actions[3]).setIcon(android.R.drawable.ic_menu_preferences);
+        smenu.add(actions[4]);
+
     }
 
     /**
@@ -134,15 +212,22 @@ public class App extends OrmLiteBaseActivity<DatabaseHelper>
         drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        // closing causes issues with testing lol
+        //databaseSingleton.closeDatabase();
+    }
+
     private boolean editSelect = false;
     private boolean deleteSelect = false;
     private Server editable_server;
-
 
     private void changeServer(Server server) {
         selectedServer = server;
         ArrayList<String> channels = null;
         if (server != null) {
+            actionBar.setTitle(server.getTitle());
             channels = server.getChannels();
             if (channels == null) {
                 channels = new ArrayList<String>();
@@ -153,9 +238,11 @@ public class App extends OrmLiteBaseActivity<DatabaseHelper>
         }
 
         getFragmentManager().beginTransaction()
-                            .replace(R.id.fragment_area,
-                                    ChannelFragment.newInstance(channels))
-                            .commit();
+                .replace(R.id.fragment_area,
+                        ChannelFragment.newInstance(channels))
+                .commit();
+
+        recreateDrawerItems();
     }
 
     /**
@@ -168,8 +255,7 @@ public class App extends OrmLiteBaseActivity<DatabaseHelper>
         if (serv == null) {
             serv = Server.getDefaultServer();
             editable_server = null;
-        }
-        else {
+        } else {
             editable_server = serv;
         }
 
@@ -177,11 +263,11 @@ public class App extends OrmLiteBaseActivity<DatabaseHelper>
         AddEditServerFragment fragment = AddEditServerFragment.newInstance(serv);
         FragmentManager fragmentManager = getFragmentManager();
         fragmentManager.beginTransaction()
-                       .setCustomAnimations(R.anim.enter_left, R.anim.exit_right,
-                               R.anim.enter_left, R.anim.exit_right)
-                       .replace(R.id.fragment_area, fragment)
-                       .addToBackStack(null)
-                       .commit();
+                .setCustomAnimations(R.anim.enter_left, R.anim.exit_right,
+                        R.anim.enter_left, R.anim.exit_right)
+                .replace(R.id.fragment_area, fragment)
+                .addToBackStack(null)
+                .commit();
     }
 
     private void removeServer(String server) {
@@ -194,11 +280,11 @@ public class App extends OrmLiteBaseActivity<DatabaseHelper>
         drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
 
         getFragmentManager().beginTransaction()
-                       .setCustomAnimations(R.anim.enter_left, R.anim.exit_right,
-                               R.anim.enter_left, R.anim.exit_right)
-                       .replace(R.id.fragment_area, new PrefFragment())
-                       .addToBackStack(null)
-                       .commit();
+                .setCustomAnimations(R.anim.enter_left, R.anim.exit_right,
+                        R.anim.enter_left, R.anim.exit_right)
+                .replace(R.id.fragment_area, new PrefFragment())
+                .addToBackStack(null)
+                .commit();
     }
 
     /**
@@ -218,16 +304,14 @@ public class App extends OrmLiteBaseActivity<DatabaseHelper>
             editSelect = false;
             deleteSelect = false;
             return true;
-        }
-        else if (selected != null && deleteSelect) {
+        } else if (selected != null && deleteSelect) {
             removeServer(selected.getTitle());
             drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
             drawer.closeDrawer(Gravity.LEFT);
             deleteSelect = false;
             editSelect = false;
             return true;
-        }
-        else if (selected != null) {
+        } else if (selected != null) {
             changeServer(selected);
             drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
             drawer.closeDrawer(Gravity.LEFT);
@@ -241,37 +325,36 @@ public class App extends OrmLiteBaseActivity<DatabaseHelper>
             createOrEditServer("");
             drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
             drawer.closeDrawer(Gravity.LEFT);
-        }
-        else if (item.getTitle().toString().equals("Edit Server")) {
+        } else if (item.getTitle().toString().equals("Edit Server")) {
             if (!editSelect) {
                 Toast.makeText(this, "Tap Server to Edit or retap to cancel", Toast.LENGTH_SHORT).show();
                 drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_OPEN);
-            }
-            else {
+            } else {
                 Toast.makeText(this, "Canceled", Toast.LENGTH_SHORT).show();
                 drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
             }
             if (deleteSelect) deleteSelect = false;
             editSelect = !editSelect;
-        }
-        else if (item.getTitle().toString().equals("Delete Server")) {
+        } else if (item.getTitle().toString().equals("Delete Server")) {
             if (!deleteSelect) {
                 Toast.makeText(this, "Tap Server to delete or retap to cancel", Toast.LENGTH_SHORT).show();
                 drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_OPEN);
-            }
-            else {
+            } else {
                 Toast.makeText(this, "Canceled", Toast.LENGTH_SHORT).show();
                 drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
             }
             if (editSelect) editSelect = false;
             deleteSelect = !deleteSelect;
-        }
-        else  if (item.getTitle().toString().equals("Settings")) {
+        } else if (item.getTitle().toString().equals("Settings")) {
             editSelect = false;
             deleteSelect = false;
             showSettings();
             drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
             drawer.closeDrawer(Gravity.LEFT);
+        }
+        else if (item.getTitle().toString().equals("Exit")) {
+            finishAffinity();
+            System.exit(0);
         }
         return true;
     }
@@ -280,12 +363,10 @@ public class App extends OrmLiteBaseActivity<DatabaseHelper>
         if (server != null) {
             if (editable_server != null && !editable_server.getTitle().equals(server.getTitle())) {
                 dao.delete(editable_server);
-            }
-            else if (dao.queryForId(server.getTitle()) != null) {
+            } else if (dao.queryForId(server.getTitle()) != null) {
                 server.setChannels(editable_server.getChannels());
                 dao.update(server);
-            }
-            else {
+            } else {
                 dao.create(server);
             }
             recreateDrawerItems();
@@ -313,7 +394,7 @@ public class App extends OrmLiteBaseActivity<DatabaseHelper>
     public void channelAdded(String channel) {
 
         if (!CHAN_MATCH.matcher(channel).find() || settings.overridePrefixReq()) {
-            Toast.makeText(this, "Channel must have a valid prefix "+CHAN_PREFIX, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Channel must have a valid prefix " + CHAN_PREFIX, Toast.LENGTH_SHORT).show();
             return;
         }
         if (SPACE_MATCH.matcher(channel).find()) {
@@ -326,5 +407,15 @@ public class App extends OrmLiteBaseActivity<DatabaseHelper>
         getServer.addChannel(channel);
         dao.update(getServer);
         changeServer(getServer);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
     }
 }

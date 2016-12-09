@@ -19,7 +19,11 @@
 package pw.dedominic.airc.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Messages associated with current channel
@@ -28,10 +32,13 @@ public class Conversation implements Serializable {
 
     private int scrollbackSize;
     private LinkedList<IrcMessage> buffer;
+    private ArrayList<String> nicks;
+
 
     public Conversation(int scrollbackSize) {
         this.scrollbackSize = scrollbackSize;
         this.buffer = new LinkedList<IrcMessage>();
+        this.nicks = new ArrayList<String>();
     }
 
     public void addMessage(IrcMessage message) {
@@ -42,7 +49,25 @@ public class Conversation implements Serializable {
         }
     }
 
+    public List<String> autocompleteChoices(String partial) {
+        List<String> completes = new ArrayList<String>();
+        Pattern finder = Pattern.compile("^"+partial);
+        for (String nick : nicks) {
+            Matcher matcher = finder.matcher(nick);
+            if (matcher.find()) completes.add(nick);
+        }
+        return completes;
+    }
+
     public LinkedList<IrcMessage> getBuffer() {
         return buffer;
+    }
+
+    public void setScrollbackSize(int scrollbackSize) {
+        this.scrollbackSize = scrollbackSize;
+    }
+
+    public ArrayList<String> getNicks() {
+        return nicks;
     }
 }

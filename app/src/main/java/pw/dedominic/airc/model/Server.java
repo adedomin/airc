@@ -149,4 +149,10 @@ public class Server implements Comparable<Server>, Serializable {
     public int compareTo(Server o) {
         return this.title.compareTo(o.getTitle());
     }
+
+    @Override
+    public boolean equals(Object s) {
+        if (!(s instanceof  Server)) return false;
+        return this.title.equals(((Server) s).getTitle());
+    }
 }

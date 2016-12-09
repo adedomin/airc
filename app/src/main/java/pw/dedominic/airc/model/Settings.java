@@ -94,7 +94,7 @@ public class Settings {
      * @return scrollback buffer size, default 150
      */
     public int getScrollbackSize() {
-        return preferences.getInt("scrollback", 150);
+        return Integer.parseInt(preferences.getString("scrollback", "150"));
     }
 
     /**
