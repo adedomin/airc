@@ -19,6 +19,7 @@
 package pw.dedominic.airc.model;
 
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
@@ -44,10 +45,8 @@ public class IrcMessage implements Serializable {
     public String toString() {
         String timestamp = "";
         if (this.timestamp != null) {
-            timestamp = String.format(Locale.getDefault(), "%d:%d",
-                    TimeUnit.MILLISECONDS.toHours(this.timestamp),
-                    TimeUnit.MILLISECONDS.toMinutes(this.timestamp)
-            );
+            timestamp = new SimpleDateFormat("HH:mm", Locale.getDefault())
+                    .format(this.timestamp);
         }
         if (nick != null && body != null) {
             return String.format(Locale.getDefault(), "[%s] <%s> %s",

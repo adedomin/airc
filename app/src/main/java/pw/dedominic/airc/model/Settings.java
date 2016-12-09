@@ -97,6 +97,10 @@ public class Settings {
         return Integer.parseInt(preferences.getString("scrollback", "150"));
     }
 
+    public String getFontSize() {
+        return preferences.getString("get-font-size", "16");
+    }
+
     /**
      * Gets default nick if not configured in the server
      *

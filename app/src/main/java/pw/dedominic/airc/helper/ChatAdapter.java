@@ -20,6 +20,8 @@ package pw.dedominic.airc.helper;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,6 +44,7 @@ import pw.dedominic.airc.model.IrcMessage;
 public class ChatAdapter extends ArrayAdapter<IrcMessage> {
 
     private Conversation chat;
+    private float fontSize = 16f;
     /**
      * Constructor
      *
@@ -69,11 +72,16 @@ public class ChatAdapter extends ArrayAdapter<IrcMessage> {
         if (ircMessage == null) return convertView;
         TextView textView = (TextView) convertView.findViewById(R.id.chat_msg);
         textView.setText(ircMessage.toString());
+        textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, fontSize);
         return convertView;
     }
 
     private void setChat(Conversation chat) {
         this.chat = chat;
+    }
+
+    public void setFontSize(String string) {
+        fontSize = Float.parseFloat(string);
     }
 
     public void addMessage(IrcMessage message) {

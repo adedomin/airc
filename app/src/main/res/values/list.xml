@@ -35,4 +35,14 @@
         <item name="purple">#7E57C2</item>
         <item name="grey">#78909C</item>
     </array>
+    <string-array name="fontSize">
+        <item>Small</item>
+        <item>Medium</item>
+        <item>Large</item>
+    </string-array>
+    <string-array name="fontValues">
+        <item>12</item>
+        <item>16</item>
+        <item>20</item>
+    </string-array>
 </resources>

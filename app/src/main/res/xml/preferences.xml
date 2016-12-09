@@ -48,4 +48,10 @@
         android:key="default-nick"
         android:inputType="textNoSuggestions"
         android:title="Default Nickname" />
+    <ListPreference
+        android:title="Font Size"
+        android:key="get-font-size"
+        android:defaultValue="16"
+        android:entries="@array/fontSize"
+        android:entryValues="@array/fontValues" />
 </PreferenceScreen>

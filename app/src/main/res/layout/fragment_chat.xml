@@ -22,10 +22,24 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent">
 
-        <TextView
-            android:id="@+id/chat_msg"
-            android:textSize="16dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+    <ListView
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clickable="false"
+        android:stackFromBottom="true"
+        android:transcriptMode="alwaysScroll"
+        android:id="@+id/chat_list"
+        android:divider="@null"
+        android:layout_width="match_parent"
+        android:headerDividersEnabled="false"
+        android:footerDividersEnabled="false"/>
+
+    <EditText
+        android:imeOptions="actionSend"
+        android:inputType="text"
+        android:maxLines="1"
+        android:id="@+id/chat_input"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
 
 </LinearLayout>

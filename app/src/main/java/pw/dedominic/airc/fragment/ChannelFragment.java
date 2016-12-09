@@ -53,10 +53,8 @@ public class ChannelFragment extends Fragment {
     private OnSelectChannel callback;
 
     private ListView chatList;
-    private EditText chatInput;
     private DrawerLayout chatDrawer;
 
-    private ChatAdapter chatAdapter;
 
     public interface OnSelectChannel {
         public void channelSelected(String channel);

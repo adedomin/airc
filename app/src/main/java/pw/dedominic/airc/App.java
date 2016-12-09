@@ -49,8 +49,11 @@ import java.util.regex.Pattern;
 import pw.dedominic.airc.db.DatabaseSingleton;
 import pw.dedominic.airc.fragment.AddEditServerFragment;
 import pw.dedominic.airc.fragment.ChannelFragment;
+import pw.dedominic.airc.fragment.ChatFragment;
 import pw.dedominic.airc.fragment.PrefFragment;
+import pw.dedominic.airc.helper.ChannelAdapter;
 import pw.dedominic.airc.model.Conversation;
+import pw.dedominic.airc.model.IrcMessage;
 import pw.dedominic.airc.model.Server;
 import pw.dedominic.airc.model.Settings;
 
@@ -60,7 +63,8 @@ import pw.dedominic.airc.model.Settings;
 public class App extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         AddEditServerFragment.OnSubmitAddServer,
-        ChannelFragment.OnSelectChannel {
+        ChannelFragment.OnSelectChannel,
+        ChatFragment.OnChatInput {
 
     public static final String CHAN_PREFIX = "[#&!+~.]";
     public static final Pattern CHAN_MATCH = Pattern.compile("^[#&!+~]");
@@ -80,6 +84,10 @@ public class App extends AppCompatActivity
 
     public Settings getSettings() {
         return settings;
+    }
+
+    public Server getSelectedServer() {
+        return selectedServer;
     }
 
     @Override
@@ -208,7 +216,9 @@ public class App extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-        super.onBackPressed();
+        if (getFragmentManager().getBackStackEntryCount() > 0) {
+            super.onBackPressed();
+        }
         drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
     }
 
@@ -225,6 +235,7 @@ public class App extends AppCompatActivity
 
     private void changeServer(Server server) {
         selectedServer = server;
+        channelConvos = new HashMap<String, Conversation>();
         ArrayList<String> channels = null;
         if (server != null) {
             actionBar.setTitle(server.getTitle());
@@ -232,9 +243,6 @@ public class App extends AppCompatActivity
             if (channels == null) {
                 channels = new ArrayList<String>();
             }
-        }
-        if (getFragmentManager().getBackStackEntryCount() > 1) {
-            this.onBackPressed();
         }
 
         getFragmentManager().beginTransaction()
@@ -287,6 +295,18 @@ public class App extends AppCompatActivity
                 .commit();
     }
 
+    private void showChat(String channel) {
+
+        drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+
+        getFragmentManager().beginTransaction()
+                .setCustomAnimations(R.anim.enter_left, R.anim.exit_right,
+                        R.anim.enter_left, R.anim.exit_right)
+                .replace(R.id.fragment_area, ChatFragment.newInstance(this, getChat(channel)))
+                .addToBackStack(null)
+                .commit();
+    }
+
     /**
      * handles nav items
      *
@@ -295,7 +315,9 @@ public class App extends AppCompatActivity
      */
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-
+        if (getFragmentManager().getBackStackEntryCount() > 0) {
+            onBackPressed();
+        }
         Server selected = dao.queryForId(item.getTitle().toString());
         if (selected != null && editSelect) {
             createOrEditServer(selected.getTitle());
@@ -375,9 +397,17 @@ public class App extends AppCompatActivity
         this.onBackPressed();
     }
 
+    public Conversation getChat(String channel) {
+        if (!channelConvos.containsKey(channel)) {
+            channelConvos.put(channel, new Conversation(settings.getScrollbackSize()));
+        }
+        return channelConvos.get(channel);
+    }
+
     @Override
     public void channelSelected(String channel) {
-        Toast.makeText(this, channel, Toast.LENGTH_SHORT).show();
+        if (channel.equals(ChannelAdapter.NOT_CONNECT)) return;
+        showChat(channel);
     }
 
     @Override
@@ -417,5 +447,22 @@ public class App extends AppCompatActivity
     @Override
     public void onStop() {
         super.onStop();
+    }
+
+    @Override
+    public void sendMessage(IrcMessage message) {
+       return;
+    }
+
+    @Override
+    public void sendCommand(String quotable) {
+        return;
+    }
+
+    @Override
+    public String getNickname() {
+        if (selectedServer != null)
+            return selectedServer.getNick();
+        return settings.getDefaultNick();
     }
 }
