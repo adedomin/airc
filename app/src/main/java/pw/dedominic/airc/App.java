@@ -56,10 +56,12 @@ import javax.net.ssl.SSLSocketFactory;
 
 import pw.dedominic.airc.db.DatabaseSingleton;
 import pw.dedominic.airc.fragment.AddEditServerFragment;
+import pw.dedominic.airc.fragment.ChannelChatPagedFragment;
 import pw.dedominic.airc.fragment.ChannelFragment;
 import pw.dedominic.airc.fragment.ChatFragment;
 import pw.dedominic.airc.fragment.PrefFragment;
 import pw.dedominic.airc.helper.BotThread;
+import pw.dedominic.airc.helper.ChanChatPager;
 import pw.dedominic.airc.helper.ChannelAdapter;
 import pw.dedominic.airc.helper.ConnectionListener;
 import pw.dedominic.airc.helper.IrcEventHandler;
@@ -84,7 +86,7 @@ public class App extends AppCompatActivity
 
     private DatabaseSingleton databaseSingleton;
     private IrcEventHandler handler;
-    private ChatFragment currentChat;
+    private ChannelChatPagedFragment currentChat;
     private PircBotX ircConnection;
     private BotThread thread;
 
@@ -239,7 +241,7 @@ public class App extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-        if (getFragmentManager().getBackStackEntryCount() > 0) {
+        if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
             super.onBackPressed();
         }
         drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
@@ -297,11 +299,16 @@ public class App extends AppCompatActivity
         }
         selectedServer = server;
 
-        getFragmentManager().beginTransaction()
-                .replace(R.id.fragment_area,
-                        ChannelFragment.newInstance(channels))
-                .commit();
-
+        ChannelFragment newChannel = ChannelFragment.newInstance(channels);
+        if (currentChat == null) {
+            currentChat = ChannelChatPagedFragment.newInstance(newChannel);
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_area, currentChat)
+                    .commit();
+        }
+        else {
+            currentChat.setChannel(newChannel);
+        }
         recreateDrawerItems();
     }
 
@@ -319,12 +326,8 @@ public class App extends AppCompatActivity
             editable_server = serv;
         }
 
-        AddEditServerFragment fragment = AddEditServerFragment.newInstance(serv);
-        FragmentManager fragmentManager = getFragmentManager();
-        fragmentManager.beginTransaction()
-                .setCustomAnimations(R.anim.enter_left, R.anim.exit_right,
-                        R.anim.enter_left, R.anim.exit_right)
-                .replace(R.id.fragment_area, fragment)
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_area, AddEditServerFragment.newInstance(serv))
                 .addToBackStack(null)
                 .commit();
     }
@@ -336,23 +339,14 @@ public class App extends AppCompatActivity
 
     private void showSettings() {
 
-        getFragmentManager().beginTransaction()
-                .setCustomAnimations(R.anim.enter_left, R.anim.exit_right,
-                        R.anim.enter_left, R.anim.exit_right)
+        getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_area, new PrefFragment())
                 .addToBackStack(null)
                 .commit();
     }
 
     private void showChat(String channel) {
-
-        currentChat = ChatFragment.newInstance(this, getChat(channel));
-        getFragmentManager().beginTransaction()
-                .setCustomAnimations(R.anim.enter_left, R.anim.exit_right,
-                        R.anim.enter_left, R.anim.exit_right)
-                .replace(R.id.fragment_area, currentChat)
-                .addToBackStack(null)
-                .commit();
+        currentChat.setChatChannel(ChatFragment.newInstance(this, getChat(channel)));
     }
 
     /**
@@ -363,7 +357,7 @@ public class App extends AppCompatActivity
      */
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        if (getFragmentManager().getBackStackEntryCount() > 0) {
+        if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
             onBackPressed();
         }
         Server selected = dao.queryForId(item.getTitle().toString());
@@ -503,7 +497,7 @@ public class App extends AppCompatActivity
     public void newMessage(IrcMessage msg) {
         getChat(msg.getChannel()).addMessage(msg);
         if (msg.getChannel().equals(selectedChannel)) {
-            currentChat.newMessage();
+            currentChat.getChatChannel().newMessage();
         }
     }
 

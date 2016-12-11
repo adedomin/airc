@@ -22,23 +22,9 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent">
 
-    <ListView
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:stackFromBottom="true"
-        android:transcriptMode="alwaysScroll"
-        android:id="@+id/chat_list"
-        android:divider="@null"
+    <android.support.v4.view.ViewPager
+        android:id="@+id/viewpager"
         android:layout_width="match_parent"
-        android:headerDividersEnabled="false"
-        android:footerDividersEnabled="false"/>
-
-    <EditText
-        android:imeOptions="actionSend"
-        android:inputType="text"
-        android:maxLines="1"
-        android:id="@+id/chat_input"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="match_parent"/>
 
 </LinearLayout>

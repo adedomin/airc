@@ -21,8 +21,7 @@ package pw.dedominic.airc.fragment;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.app.Fragment;
-import android.util.Log;
+import android.support.v4.app.Fragment;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -54,8 +53,6 @@ public class AddEditServerFragment extends Fragment
 
     private Button saveBtn;
     private Button cancelBtn;
-
-    private GestureDetector detector;
 
     private OnSubmitAddServer callback;
 

@@ -65,7 +65,8 @@ public class ChannelAdapter extends ArrayAdapter<String> {
         else {
             arrcopy = (ArrayList<String>) channels.clone();
             Collections.sort(arrcopy);
-            arrcopy.add(0, STATUS_VALUE);
+            // no status messages are populated, hide til later
+            //arrcopy.add(0, STATUS_VALUE);
         }
 
         return new ChannelAdapter(context, arrcopy, false);

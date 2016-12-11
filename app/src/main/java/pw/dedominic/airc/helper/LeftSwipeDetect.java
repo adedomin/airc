@@ -50,7 +50,8 @@ public class LeftSwipeDetect extends GestureDetector.SimpleOnGestureListener {
             if (e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE
                     && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
                 return false;
-            } else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE
+            }
+            else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE
                     && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
                 activity.onBackPressed();
             }

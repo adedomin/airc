@@ -22,6 +22,7 @@ import android.os.Handler;
 import android.os.Message;
 
 import org.pircbotx.hooks.ListenerAdapter;
+import org.pircbotx.hooks.events.ConnectEvent;
 import org.pircbotx.hooks.events.DisconnectEvent;
 import org.pircbotx.hooks.events.JoinEvent;
 import org.pircbotx.hooks.events.MessageEvent;
@@ -43,9 +44,15 @@ public class ConnectionListener extends ListenerAdapter {
     public static final int QUIT_EVENT = 3;
     public static final int STATUS_EVENT = 4;
     public static final int DISCONNECTED_EVENT = 5;
+    public static final int CONNECTED_EVENT = 6;
 
     public ConnectionListener(Handler callback) {
         this.callback = callback;
+    }
+
+    @Override
+    public void onConnect(ConnectEvent event) throws Exception {
+        super.onConnect(event);
     }
 
     /**

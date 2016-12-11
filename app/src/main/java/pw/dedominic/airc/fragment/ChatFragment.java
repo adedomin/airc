@@ -18,22 +18,21 @@
 
 package pw.dedominic.airc.fragment;
 
-import android.app.Fragment;
 import android.content.Context;
 import android.os.Bundle;
-import android.view.GestureDetector;
+import android.support.v4.app.Fragment;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
+import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import pw.dedominic.airc.R;
 import pw.dedominic.airc.helper.ChatAdapter;
-import pw.dedominic.airc.helper.LeftSwipeDetect;
 import pw.dedominic.airc.model.Conversation;
 import pw.dedominic.airc.model.IrcMessage;
 import pw.dedominic.airc.model.Settings;
@@ -82,12 +81,34 @@ public class ChatFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle bundle) {
         View v = inflater.inflate(R.layout.fragment_chat, null);
-        final GestureDetector gesture = new GestureDetector(getActivity(),
-            new LeftSwipeDetect(getActivity()));
-        if (callback != null && callback.getSettings() != null)
+
+        if (callback != null && callback.getSettings() != null && chatAdapter != null)
             chatAdapter.setFontSize(callback.getSettings().getFontSize());
         chatList = (ListView) v.findViewById(R.id.chat_list);
         chatList.setAdapter(chatAdapter);
+        chatList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if (chatAdapter.getItem(position) == null) return;
+                String nick = chatAdapter.getItem(position).getNick();
+                int inputpos = chatInput.getSelectionStart();
+                if (inputpos < 1) nick = nick+":";
+                chatInput.setText(chatInput.getText().insert(inputpos, nick+" "));
+                chatInput.setSelection(inputpos+nick.length()+1);
+                chatInput.requestFocus();
+            }
+        });
+        chatList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                if (chatAdapter.getItem(position) == null) return true;
+                String body = chatAdapter.getItem(position).toString() + " <--";
+                chatInput.setText(body);
+                chatInput.setSelection(body.length()+1);
+                chatInput.requestFocus();
+                return true;
+            }
+        });
         chatInput = (EditText) v.findViewById(R.id.chat_input);
         chatInput.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
