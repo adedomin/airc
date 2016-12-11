@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class IrcMessage implements Serializable {
 
+    private String channel;
     private String body;
     private String nick;
     private Long timestamp;
@@ -36,6 +37,13 @@ public class IrcMessage implements Serializable {
     }
 
     public IrcMessage(String body, String nick, Long timestamp) {
+        this.body = body;
+        this.nick = nick;
+        this.timestamp = timestamp;
+    }
+
+    public IrcMessage(String channel, String body, String nick, Long timestamp) {
+        this.channel = channel;
         this.body = body;
         this.nick = nick;
         this.timestamp = timestamp;
@@ -81,5 +89,13 @@ public class IrcMessage implements Serializable {
 
     public void setTimestamp(Long timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public String getChannel() {
+        return channel;
+    }
+
+    public void setChannel(String channel) {
+        this.channel = channel;
     }
 }

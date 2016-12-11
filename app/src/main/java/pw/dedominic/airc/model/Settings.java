@@ -88,6 +88,10 @@ public class Settings {
         return preferences.getBoolean("override-prefix", false);
     }
 
+    public boolean overrideTlsCheck() {
+        return preferences.getBoolean("override-tls-valid", false);
+    }
+
     /**
      * set maximum scrollback buffer
      *

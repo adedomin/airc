@@ -38,6 +38,10 @@
         android:defaultValue="false"
         android:key="override-prefix"
         android:title="Channel Prefix Not Required" />
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="override-tls-valid"
+        android:title="Trust any TLS Cert" />
     <EditTextPreference
         android:defaultValue="150"
         android:key="scrollback"

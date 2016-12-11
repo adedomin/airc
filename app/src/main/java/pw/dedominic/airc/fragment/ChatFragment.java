@@ -21,6 +21,7 @@ package pw.dedominic.airc.fragment;
 import android.app.Fragment;
 import android.content.Context;
 import android.os.Bundle;
+import android.view.GestureDetector;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,6 +33,7 @@ import android.widget.TextView;
 
 import pw.dedominic.airc.R;
 import pw.dedominic.airc.helper.ChatAdapter;
+import pw.dedominic.airc.helper.LeftSwipeDetect;
 import pw.dedominic.airc.model.Conversation;
 import pw.dedominic.airc.model.IrcMessage;
 import pw.dedominic.airc.model.Settings;
@@ -80,7 +82,10 @@ public class ChatFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle bundle) {
         View v = inflater.inflate(R.layout.fragment_chat, null);
-        chatAdapter.setFontSize(callback.getSettings().getFontSize());
+        final GestureDetector gesture = new GestureDetector(getActivity(),
+            new LeftSwipeDetect(getActivity()));
+        if (callback != null && callback.getSettings() != null)
+            chatAdapter.setFontSize(callback.getSettings().getFontSize());
         chatList = (ListView) v.findViewById(R.id.chat_list);
         chatList.setAdapter(chatAdapter);
         chatInput = (EditText) v.findViewById(R.id.chat_input);
@@ -88,11 +93,14 @@ public class ChatFragment extends Fragment {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 if (actionId == EditorInfo.IME_ACTION_SEND) {
-                    chatAdapter.addMessage(new IrcMessage(
+                    IrcMessage msg = new IrcMessage(
                         v.getText().toString(),
                         callback.getNickname(),
                         System.currentTimeMillis()
-                    ));
+                    );
+                    chatAdapter.addMessage(msg);
+                    callback.sendMessage(msg);
+                    chatInput.setText("");
                 }
                 return true;
             }
