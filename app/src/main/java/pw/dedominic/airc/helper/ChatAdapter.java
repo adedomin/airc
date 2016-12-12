@@ -84,9 +84,4 @@ public class ChatAdapter extends ArrayAdapter<IrcMessage> {
         if (string == null || string.equals("")) return;
         fontSize = Float.parseFloat(string);
     }
-
-    public void addMessage(IrcMessage message) {
-        chat.addMessage(message);
-        notifyDataSetChanged();
-    }
 }

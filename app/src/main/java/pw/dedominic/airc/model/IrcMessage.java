@@ -33,6 +33,16 @@ public class IrcMessage implements Serializable {
     private String nick;
     private Long timestamp;
 
+    public boolean isStatus() {
+        return status;
+    }
+
+    public void setStatus(boolean status) {
+        this.status = status;
+    }
+
+    private boolean status;
+
     public IrcMessage() {
     }
 
@@ -56,14 +66,17 @@ public class IrcMessage implements Serializable {
             timestamp = new SimpleDateFormat("HH:mm", Locale.getDefault())
                     .format(this.timestamp);
         }
-        if (nick != null && body != null) {
+
+        if (status) {
+            return timestamp+" "+body;
+        }
+        else if (nick != null && body != null) {
             return String.format(Locale.getDefault(), "[%s] <%s> %s",
                     timestamp,
                     this.nick,
                     this.body
             );
         }
-
         return "";
     }
 

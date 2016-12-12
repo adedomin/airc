@@ -25,7 +25,11 @@ import org.pircbotx.hooks.ListenerAdapter;
 import org.pircbotx.hooks.events.ConnectEvent;
 import org.pircbotx.hooks.events.DisconnectEvent;
 import org.pircbotx.hooks.events.JoinEvent;
+import org.pircbotx.hooks.events.KickEvent;
 import org.pircbotx.hooks.events.MessageEvent;
+import org.pircbotx.hooks.events.NickChangeEvent;
+import org.pircbotx.hooks.events.PartEvent;
+import org.pircbotx.hooks.events.QuitEvent;
 import org.pircbotx.hooks.types.GenericChannelEvent;
 import org.pircbotx.hooks.types.GenericMessageEvent;
 
@@ -45,6 +49,7 @@ public class ConnectionListener extends ListenerAdapter {
     public static final int STATUS_EVENT = 4;
     public static final int DISCONNECTED_EVENT = 5;
     public static final int CONNECTED_EVENT = 6;
+    public static final int NICK_CHANGE_EVENT = 7;
 
     public ConnectionListener(Handler callback) {
         this.callback = callback;
@@ -52,7 +57,7 @@ public class ConnectionListener extends ListenerAdapter {
 
     @Override
     public void onConnect(ConnectEvent event) throws Exception {
-        super.onConnect(event);
+        callback.sendEmptyMessage(CONNECTED_EVENT);
     }
 
     /**
@@ -84,8 +89,50 @@ public class ConnectionListener extends ListenerAdapter {
         Message message = callback.obtainMessage();
         message.what = JOIN_EVENT;
         IrcMessage ircMessage = new IrcMessage();
+        ircMessage.setTimestamp(event.getTimestamp());
         ircMessage.setNick(event.getUser().getNick());
         ircMessage.setChannel(event.getChannel().getName());
+        ircMessage.setBody("* "+ircMessage.getNick()+" HAS JOINED *");
+        ircMessage.setStatus(true);
+        message.obj = ircMessage;
+        callback.sendMessage(message);
+    }
+
+    @Override
+    public void onPart(PartEvent event) throws Exception {
+        Message message = callback.obtainMessage();
+        message.what = PART_EVENT;
+        IrcMessage ircMessage = new IrcMessage();
+        ircMessage.setTimestamp(event.getTimestamp());
+        ircMessage.setNick(event.getUser().getNick());
+        ircMessage.setChannel(event.getChannel().getName());
+        ircMessage.setBody("* "+ircMessage.getNick()+" HAS LEFT *");
+        ircMessage.setStatus(true);
+        message.obj = ircMessage;
+        callback.sendMessage(message);
+    }
+
+    @Override
+    public void onKick(KickEvent event) throws Exception {
+        Message message = callback.obtainMessage();
+        message.what = PART_EVENT;
+        IrcMessage ircMessage = new IrcMessage();
+        ircMessage.setTimestamp(event.getTimestamp());
+        ircMessage.setNick(event.getRecipient().getNick());
+        ircMessage.setChannel(event.getChannel().getName());
+        ircMessage.setBody("* "+ircMessage.getNick()+" HAS BEEN KICKED *");
+        ircMessage.setStatus(true);
+        message.obj = ircMessage;
+        callback.sendMessage(message);
+    }
+
+    @Override
+    public void onNickChange(NickChangeEvent event) throws Exception {
+        Message message = callback.obtainMessage();
+        message.what = NICK_CHANGE_EVENT;
+        IrcMessage ircMessage = new IrcMessage();
+        ircMessage.setNick(event.getOldNick());
+        ircMessage.setBody(event.getNewNick());
         message.obj = ircMessage;
         callback.sendMessage(message);
     }

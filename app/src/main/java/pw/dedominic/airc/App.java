@@ -59,12 +59,14 @@ import pw.dedominic.airc.fragment.AddEditServerFragment;
 import pw.dedominic.airc.fragment.ChannelChatPagedFragment;
 import pw.dedominic.airc.fragment.ChannelFragment;
 import pw.dedominic.airc.fragment.ChatFragment;
+import pw.dedominic.airc.fragment.ConnectingFragment;
 import pw.dedominic.airc.fragment.PrefFragment;
 import pw.dedominic.airc.helper.BotThread;
 import pw.dedominic.airc.helper.ChanChatPager;
 import pw.dedominic.airc.helper.ChannelAdapter;
 import pw.dedominic.airc.helper.ConnectionListener;
 import pw.dedominic.airc.helper.IrcEventHandler;
+import pw.dedominic.airc.helper.NetworkCheck;
 import pw.dedominic.airc.model.Conversation;
 import pw.dedominic.airc.model.IrcMessage;
 import pw.dedominic.airc.model.Server;
@@ -161,6 +163,10 @@ public class App extends AppCompatActivity
                 invalidateOptionsMenu();
             }
         };
+        if (ircConnection != null) {
+            ircConnection.close();
+            thread = null;
+        }
         drawer.setDrawerListener(toggle);
         recreateDrawerItems();
         changeServer(selectedServer);
@@ -235,6 +241,11 @@ public class App extends AppCompatActivity
         savedInstance.putSerializable("selectedServer", selectedServer);
         savedInstance.putSerializable("channelConvos", (HashMap) channelConvos);
 
+        onBackPressed();
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_area, ChannelChatPagedFragment.newInstance(null))
+                .commit();
+
         // Always call the superclass so it can save the view hierarchy state
         super.onSaveInstanceState(savedInstance);
     }
@@ -258,9 +269,17 @@ public class App extends AppCompatActivity
     private boolean deleteSelect = false;
     private Server editable_server;
 
+    /**
+     * Generates PircBotX config
+     *
+     * @param selectedServer the selected server
+     * @return the config
+     */
     private Configuration generateConnectConfig(Server selectedServer) {
+
         Configuration.Builder configBuilder = new Configuration.Builder();
         configBuilder.setName(selectedServer.getNick())
+                     .setAutoNickChange(true) // prevents collisions
                      .addServer(selectedServer.getHost())
                      .addAutoJoinChannels(selectedServer.getChannels())
                      .addListener(new ConnectionListener(handler));
@@ -278,6 +297,7 @@ public class App extends AppCompatActivity
 
     private void changeServer(Server server) {
 
+        boolean connecting = false;
         selectedChannel = "";
         ArrayList<String> channels = null;
         if (server != null) {
@@ -286,7 +306,9 @@ public class App extends AppCompatActivity
             if (channels == null) {
                 channels = new ArrayList<String>();
             }
-            if (!(server.equals(selectedServer))) {
+            if (!(server.equals(selectedServer))
+                    || ircConnection == null
+                    || !ircConnection.isConnected()) {
                 if (ircConnection != null && ircConnection.isConnected()) {
                     ircConnection.sendIRC().quitServer("bye");
                     thread = null;
@@ -295,6 +317,7 @@ public class App extends AppCompatActivity
                 ircConnection = new PircBotX(generateConnectConfig(server));
                 thread = new BotThread(ircConnection, handler);
                 thread.start();
+                connecting = true;
             }
         }
         selectedServer = server;
@@ -308,6 +331,13 @@ public class App extends AppCompatActivity
         }
         else {
             currentChat.setChannel(newChannel);
+        }
+
+        if (connecting) {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_area, new ConnectingFragment())
+                    .addToBackStack("connecting")
+                    .commit();
         }
         recreateDrawerItems();
     }
@@ -466,6 +496,18 @@ public class App extends AppCompatActivity
     }
 
     @Override
+    public void channelRemoved(IrcMessage msg) {
+        if (!(msg.isStatus())) return;
+        if (selectedServer == null) return;
+        if (!(msg.getNick().equals(selectedServer.getNick()))) return;
+        Server getServer = dao.queryForId(selectedServer.getTitle());
+        if (getServer == null) return;
+        getServer.removeChannel(msg.getChannel());
+        dao.update(getServer);
+        changeServer(getServer);
+    }
+
+    @Override
     public void channelAdded(String channel) {
 
         if (!CHAN_MATCH.matcher(channel).find() || settings.overridePrefixReq()) {
@@ -495,6 +537,7 @@ public class App extends AppCompatActivity
     }
 
     public void newMessage(IrcMessage msg) {
+        if (msg.isStatus() && !settings.showJoinPartQuit()) return;
         getChat(msg.getChannel()).addMessage(msg);
         if (msg.getChannel().equals(selectedChannel)) {
             currentChat.getChatChannel().newMessage();
@@ -507,13 +550,29 @@ public class App extends AppCompatActivity
             ircConnection.close();
             ircConnection = null;
         }
+        connect();
         changeServer(null);
     }
 
     public void disconnect() {
         Toast.makeText(this, "Server Disconnected", Toast.LENGTH_SHORT).show();
         thread = null;
+        connect();
         changeServer(null);
+    }
+
+    public void connect() {
+       if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+           if (getSupportFragmentManager().getBackStackEntryAt(0).getName().equals("connecting"))
+               onBackPressed();
+       }
+    }
+
+    public void nickChange(IrcMessage msg) {
+        if (selectedServer == null) return;
+        if (msg.getNick().equals(selectedServer.getNick())) {
+            selectedServer.setNick(msg.getBody());
+        }
     }
 
     @Override
@@ -530,9 +589,11 @@ public class App extends AppCompatActivity
     public void sendMessage(IrcMessage message) {
         if (ircConnection == null || !ircConnection.isConnected()) {
             Toast.makeText(this, "Not Connected", Toast.LENGTH_SHORT).show();
+            changeServer(selectedServer);
             return;
         }
         message.setChannel(selectedChannel);
+        getChat(selectedChannel).addMessage(message);
         if (ircConnection.isConnected())
             ircConnection.sendRaw().rawLine("PRIVMSG "+message.getChannel()+" :"+message.getBody());
     }

@@ -36,7 +36,10 @@ public class IrcEventHandler extends Handler {
         public interface OnIrcEvent {
             public void newMessage(IrcMessage msg);
             public void channelAdded(IrcMessage msg);
+            public void channelRemoved(IrcMessage msg);
+            public void nickChange(IrcMessage msg);
             public void disconnect();
+            public void connect();
         }
 
         public IrcEventHandler(Looper looper, Activity activity) {
@@ -59,8 +62,12 @@ public class IrcEventHandler extends Handler {
                 case ConnectionListener.JOIN_EVENT:
                     if (!(msg.obj instanceof IrcMessage)) return;
                     callback.channelAdded((IrcMessage) msg.obj);
+                    callback.newMessage((IrcMessage) msg.obj);
                     break;
                 case ConnectionListener.PART_EVENT:
+                    if (!(msg.obj instanceof IrcMessage)) return;
+                    callback.channelRemoved((IrcMessage) msg.obj);
+                    callback.newMessage((IrcMessage) msg.obj);
                     break;
                 case ConnectionListener.QUIT_EVENT:
                     break;
@@ -69,6 +76,12 @@ public class IrcEventHandler extends Handler {
                 case ConnectionListener.DISCONNECTED_EVENT:
                     callback.disconnect();
                     break;
+                case ConnectionListener.CONNECTED_EVENT:
+                    callback.connect();
+                    break;
+                case ConnectionListener.NICK_CHANGE_EVENT:
+                    if (!(msg.obj instanceof IrcMessage)) return;
+                    callback.nickChange((IrcMessage) msg.obj);
             }
         }
 }

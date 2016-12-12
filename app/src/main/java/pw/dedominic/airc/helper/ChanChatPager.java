@@ -18,6 +18,7 @@
 
 package pw.dedominic.airc.helper;
 
+import android.os.Parcelable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;

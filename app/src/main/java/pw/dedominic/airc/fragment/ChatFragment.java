@@ -114,13 +114,14 @@ public class ChatFragment extends Fragment {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 if (actionId == EditorInfo.IME_ACTION_SEND) {
+                    if (v.getText().toString().equals("")) return true;
                     IrcMessage msg = new IrcMessage(
                         v.getText().toString(),
                         callback.getNickname(),
                         System.currentTimeMillis()
                     );
-                    chatAdapter.addMessage(msg);
                     callback.sendMessage(msg);
+                    chatAdapter.notifyDataSetChanged();
                     chatInput.setText("");
                 }
                 return true;
