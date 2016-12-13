@@ -109,6 +109,8 @@ public class Server implements Comparable<Server>, Serializable {
     }
 
     public ArrayList<String> getChannels() {
+        if (channels == null)
+            channels = new ArrayList<String>();
         return channels;
     }
 

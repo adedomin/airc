@@ -293,6 +293,11 @@ public class App extends AppCompatActivity
                 configBuilder.setSocketFactory(SSLSocketFactory.getDefault());
             }
         }
+        if (!selectedServer.getPassword().equals(""))
+            configBuilder.setServerPassword(selectedServer.getPassword());
+        if (!selectedServer.getNickpass().equals(""))
+            configBuilder.setNickservPassword(selectedServer.getNickpass());
+
         return configBuilder.buildConfiguration();
     }
 
@@ -544,10 +549,8 @@ public class App extends AppCompatActivity
             currentChat.getChatChannel().newMessage();
         }
         if (settings.showNotifications() && !msg.isStatus()) {
-            Log.e("notifyTest", "test");
             if (msg.getBody().contains(selectedServer.getNick())) {
 
-                Log.e("notifyTest", "should notify");
                 NotificationManager notificationManager =
                         (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
