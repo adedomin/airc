@@ -62,10 +62,8 @@ public class BotThread extends Thread{
     public void run() {
         try {
             connection.startBot();
-        } catch (IOException e) {
-            handler.sendEmptyMessage(ConnectionListener.DISCONNECTED_EVENT);
-        } catch (IrcException e) {
-            handler.sendEmptyMessage(ConnectionListener.DISCONNECTED_EVENT);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         handler.sendEmptyMessage(ConnectionListener.DISCONNECTED_EVENT);
     }

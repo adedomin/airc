@@ -19,6 +19,9 @@
 package pw.dedominic.airc;
 
 import android.app.FragmentManager;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.StrictMode;
@@ -29,6 +32,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.NotificationCompat;
 import android.text.InputType;
 import android.util.Log;
 import android.view.Gravity;
@@ -242,9 +246,6 @@ public class App extends AppCompatActivity
         savedInstance.putSerializable("channelConvos", (HashMap) channelConvos);
 
         onBackPressed();
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_area, ChannelChatPagedFragment.newInstance(null))
-                .commit();
 
         // Always call the superclass so it can save the view hierarchy state
         super.onSaveInstanceState(savedInstance);
@@ -541,6 +542,21 @@ public class App extends AppCompatActivity
         getChat(msg.getChannel()).addMessage(msg);
         if (msg.getChannel().equals(selectedChannel)) {
             currentChat.getChatChannel().newMessage();
+        }
+        if (settings.showNotifications() && !msg.isStatus()) {
+            Log.e("notifyTest", "test");
+            if (msg.getBody().contains(selectedServer.getNick())) {
+
+                Log.e("notifyTest", "should notify");
+                NotificationManager notificationManager =
+                        (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+                notificationManager.notify(0, new NotificationCompat.Builder(this)
+                        .setContentTitle("Message Highlight: "+msg.getChannel())
+                        .setContentText(msg.toString())
+                        .setSmallIcon(R.drawable.ic_cogwheel)
+                        .build());
+            }
         }
     }
 

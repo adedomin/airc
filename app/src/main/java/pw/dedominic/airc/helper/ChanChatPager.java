@@ -22,6 +22,9 @@ import android.os.Parcelable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
+import android.util.Log;
+
+import java.util.List;
 
 import pw.dedominic.airc.fragment.BlankFragment;
 import pw.dedominic.airc.fragment.ChannelFragment;
@@ -32,17 +35,20 @@ import pw.dedominic.airc.fragment.ChatFragment;
  */
 public class ChanChatPager extends FragmentStatePagerAdapter {
 
+    private boolean newChat = false;
     private BlankFragment fragment = new BlankFragment();
     private ChannelFragment channelFragment;
     private ChatFragment currentChat;
 
     public void setChannelFragment(ChannelFragment channelFragment) {
         this.channelFragment = channelFragment;
+        newChat = false;
         notifyDataSetChanged();
     }
 
     public void setCurrentChat(ChatFragment currentChat) {
         this.currentChat = currentChat;
+        newChat = true;
         notifyDataSetChanged();
     }
 
@@ -54,7 +60,12 @@ public class ChanChatPager extends FragmentStatePagerAdapter {
 
     @Override
     public int getItemPosition(Object object) {
-        return POSITION_NONE;
+        if (newChat && ( object instanceof BlankFragment || object instanceof ChatFragment ))
+            return POSITION_NONE;
+        if (!newChat && object instanceof ChannelFragment) {
+            return POSITION_NONE;
+        }
+        return POSITION_UNCHANGED;
     }
 
     /**
